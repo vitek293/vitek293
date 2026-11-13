@@ -45,7 +45,8 @@
 
 > **Xiaomi Mi Box / Mi TV Stick (Android 9)** — отдельная подробная инструкция
 > с учётом того, что кнопка Home на Xiaomi привязана к PatchWall:
-> [`docs/xiaomi-mi-box.md`](docs/xiaomi-mi-box.md)
+> [`docs/xiaomi-mi-box.md`](docs/xiaomi-mi-box.md).
+> Всё в одну команду: `./scripts/xiaomi-setup.sh 192.168.0.8`
 
 ### Вариант 1 — через ADB по сети (самый быстрый)
 
