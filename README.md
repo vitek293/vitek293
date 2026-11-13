@@ -48,6 +48,8 @@
 > [`docs/xiaomi-mi-box.md`](docs/xiaomi-mi-box.md).
 > Всё в одну команду: `./scripts/xiaomi-setup.sh 192.168.0.8`
 > Подключение с нуля под Windows — [`docs/connect-windows.md`](docs/connect-windows.md).
+> Установка одной командой в PowerShell:
+> `powershell -ExecutionPolicy Bypass -File scripts\setup-windows.ps1 -Apk C:\path\app-debug.apk`
 
 ### Вариант 1 — через ADB по сети (самый быстрый)
 
