@@ -18,6 +18,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
@@ -36,8 +40,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusGroup
-import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -49,14 +51,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.tv.foundation.lazy.TvLazyColumn
-import androidx.tv.foundation.lazy.TvLazyRow
-import androidx.tv.foundation.lazy.items
-import androidx.tv.foundation.lazy.rememberTvLazyListState
 import com.vitek.tvlauncher.LauncherViewModel
 import com.vitek.tvlauncher.data.TvApp
 import java.text.SimpleDateFormat
-import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import kotlinx.coroutines.delay
@@ -68,6 +65,11 @@ private data class SystemAction(
     val onClick: () -> Unit,
 )
 
+/** Section indexes used for the background parallax. */
+private const val SECTION_TOP = 0
+private const val SECTION_APPS = 1
+private const val SECTION_SYSTEM = 2
+
 @Composable
 fun LauncherScreen(viewModel: LauncherViewModel) {
     val apps by viewModel.apps.collectAsState()
@@ -75,16 +77,18 @@ fun LauncherScreen(viewModel: LauncherViewModel) {
     val context = LocalContext.current
     val density = LocalDensity.current
 
-    var focusedSection by remember { mutableIntStateOf(0) }
+    var focusedSection by remember { mutableIntStateOf(SECTION_TOP) }
     var dialogApp by remember { mutableStateOf<TvApp?>(null) }
     var restoreFocusPkg by remember { mutableStateOf<String?>(null) }
     var initialFocusDone by remember { mutableStateOf(false) }
 
+    // One requester per tile; the section prefix keeps keys unique, since an app
+    // can appear both in the Top Shelf row and in the "all apps" row.
     val focusRequesters = remember { mutableMapOf<String, FocusRequester>() }
-    fun requesterFor(pkg: String): FocusRequester =
-        focusRequesters.getOrPut(pkg) { FocusRequester() }
+    fun requesterFor(key: String): FocusRequester =
+        focusRequesters.getOrPut(key) { FocusRequester() }
 
-    val listState = rememberTvLazyListState()
+    val listState = rememberLazyListState()
 
     val featured = remember(apps, pins) {
         val pinned = pins.mapNotNull { pkg -> apps.find { it.packageName == pkg } }
@@ -101,12 +105,12 @@ fun LauncherScreen(viewModel: LauncherViewModel) {
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    // Initial focus: first Top Shelf tile (or first app).
+    // Initial focus: the first Top Shelf tile (or the first app).
     LaunchedEffect(featured, apps) {
         if (!initialFocusDone) {
             val target = featured.firstOrNull() ?: apps.firstOrNull()
             if (target != null) {
-                requesterFor(target.packageName).requestFocus()
+                requesterFor("top:${target.packageName}").requestFocus()
                 initialFocusDone = true
             }
         }
@@ -117,13 +121,13 @@ fun LauncherScreen(viewModel: LauncherViewModel) {
         val pkg = restoreFocusPkg
         if (pkg != null) {
             restoreFocusPkg = null
-            val exists = apps.any { it.packageName == pkg }
-            val target = if (exists) {
-                pkg
-            } else {
-                (featured.firstOrNull() ?: apps.firstOrNull())?.packageName
+            val target = (featured.firstOrNull() ?: apps.firstOrNull())?.packageName
+            val key = when {
+                featured.any { it.packageName == pkg } -> "top:$pkg"
+                target != null -> "top:$target"
+                else -> null
             }
-            if (target != null) requesterFor(target).requestFocus()
+            if (key != null) requesterFor(key).requestFocus()
         }
     }
 
@@ -196,7 +200,7 @@ fun LauncherScreen(viewModel: LauncherViewModel) {
         }
     }
 
-    // Subtle parallax: background glows shift with the focused row.
+    // Subtle parallax: background glows drift as the focused row changes.
     val bgShift by animateDpAsState(
         targetValue = (focusedSection * 18).dp,
         animationSpec = tween(700),
@@ -272,12 +276,10 @@ fun LauncherScreen(viewModel: LauncherViewModel) {
             ) {
                 Header()
                 Spacer(Modifier.height(24.dp))
-                TvLazyColumn(
+                LazyColumn(
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxWidth()
-                        .focusGroup()
-                        .focusRestorer(),
+                        .fillMaxWidth(),
                     state = listState,
                     verticalArrangement = Arrangement.spacedBy(36.dp),
                     contentPadding = PaddingValues(bottom = 48.dp),
@@ -286,16 +288,15 @@ fun LauncherScreen(viewModel: LauncherViewModel) {
                         item {
                             SectionTitle("Топ")
                             Spacer(Modifier.height(16.dp))
-                            TvLazyRow(
-                                modifier = Modifier.focusGroup(),
+                            LazyRow(
                                 horizontalArrangement = Arrangement.spacedBy(24.dp),
                                 contentPadding = PaddingValues(end = 48.dp),
                             ) {
-                                items(featured, key = { it.packageName }) { app ->
+                                items(featured, key = { "top:" + it.packageName }) { app ->
                                     TopShelfTile(
                                         app = app,
-                                        focusRequester = requesterFor(app.packageName),
-                                        onFocusChange = { if (it) focusedSection = 0 },
+                                        focusRequester = requesterFor("top:${app.packageName}"),
+                                        onFocusChange = { if (it) focusedSection = SECTION_TOP },
                                         onClick = { launchApp(app) },
                                         onLongClick = { openDialog(app) },
                                     )
@@ -307,16 +308,15 @@ fun LauncherScreen(viewModel: LauncherViewModel) {
                     item {
                         SectionTitle("Приложения")
                         Spacer(Modifier.height(16.dp))
-                        TvLazyRow(
-                            modifier = Modifier.focusGroup(),
+                        LazyRow(
                             horizontalArrangement = Arrangement.spacedBy(28.dp),
                             contentPadding = PaddingValues(end = 48.dp),
                         ) {
-                            items(apps, key = { it.packageName }) { app ->
+                            items(apps, key = { "app:" + it.packageName }) { app ->
                                 AppTile(
                                     app = app,
-                                    focusRequester = requesterFor(app.packageName),
-                                    onFocusChange = { if (it) focusedSection = 1 },
+                                    focusRequester = requesterFor("app:${app.packageName}"),
+                                    onFocusChange = { if (it) focusedSection = SECTION_APPS },
                                     onClick = { launchApp(app) },
                                     onLongClick = { openDialog(app) },
                                 )
@@ -327,18 +327,17 @@ fun LauncherScreen(viewModel: LauncherViewModel) {
                     item {
                         SectionTitle("Система")
                         Spacer(Modifier.height(16.dp))
-                        TvLazyRow(
-                            modifier = Modifier.focusGroup(),
+                        LazyRow(
                             horizontalArrangement = Arrangement.spacedBy(28.dp),
                             contentPadding = PaddingValues(end = 48.dp),
                         ) {
-                            items(systemActions, key = { it.title }) { action ->
+                            items(systemActions, key = { "sys:" + it.title }) { action ->
                                 SystemTile(
                                     title = action.title,
                                     icon = action.icon,
                                     gradient = action.gradient,
-                                    focusRequester = requesterFor("sys:" + action.title),
-                                    onFocusChange = { if (it) focusedSection = 2 },
+                                    focusRequester = requesterFor("sys:${action.title}"),
+                                    onFocusChange = { if (it) focusedSection = SECTION_SYSTEM },
                                     onClick = action.onClick,
                                 )
                             }

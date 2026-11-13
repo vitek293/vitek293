@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -37,7 +38,6 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
@@ -94,7 +94,6 @@ fun AppTile(
                 )
                 .clip(TileShape)
                 .background(Color.White)
-                .focusable()
                 .focusRequester(focusRequester)
                 .onFocusChanged {
                     focused = it.isFocused
@@ -117,6 +116,7 @@ fun AppTile(
                         else -> false
                     }
                 }
+                .focusable()
                 .pointerInput(Unit) {
                     detectTapGestures(
                         onTap = { onClick() },
@@ -136,7 +136,7 @@ fun AppTile(
             }
         }
         Spacer(Modifier.height(10.dp))
-        androidx.compose.material3.Text(
+        Text(
             text = app.label,
             color = if (focused) Color.White else Color.White.copy(alpha = 0.75f),
             fontSize = 14.sp,
@@ -149,7 +149,7 @@ fun AppTile(
     }
 }
 
-/** Wide "Top Shelf" tile for featured apps. */
+/** Wide "Top Shelf" tile for featured apps, with a gradient card behind the icon. */
 @Composable
 fun TopShelfTile(
     app: TvApp,
@@ -188,7 +188,6 @@ fun TopShelfTile(
                 color = Color.White.copy(alpha = if (focused) 0.65f else 0f),
                 shape = TopShelfShape,
             )
-            .focusable()
             .focusRequester(focusRequester)
             .onFocusChanged {
                 focused = it.isFocused
@@ -211,6 +210,7 @@ fun TopShelfTile(
                     else -> false
                 }
             }
+            .focusable()
             .pointerInput(Unit) {
                 detectTapGestures(
                     onTap = { onClick() },
@@ -230,7 +230,7 @@ fun TopShelfTile(
         )
         Spacer(Modifier.width(20.dp))
         Column {
-            androidx.compose.material3.Text(
+            Text(
                 text = app.label,
                 color = Color.White,
                 fontSize = 24.sp,
@@ -239,7 +239,7 @@ fun TopShelfTile(
                 overflow = TextOverflow.Ellipsis,
             )
             Spacer(Modifier.height(6.dp))
-            androidx.compose.material3.Text(
+            Text(
                 text = "Открыть",
                 color = Color.White.copy(alpha = 0.55f),
                 fontSize = 15.sp,
@@ -281,7 +281,6 @@ fun SystemTile(
                 )
                 .clip(TileShape)
                 .background(Brush.linearGradient(gradient))
-                .focusable()
                 .focusRequester(focusRequester)
                 .onFocusChanged {
                     focused = it.isFocused
@@ -295,6 +294,7 @@ fun SystemTile(
                         false
                     }
                 }
+                .focusable()
                 .pointerInput(Unit) {
                     detectTapGestures(onTap = { onClick() })
                 },
@@ -308,7 +308,7 @@ fun SystemTile(
             )
         }
         Spacer(Modifier.height(10.dp))
-        androidx.compose.material3.Text(
+        Text(
             text = title,
             color = if (focused) Color.White else Color.White.copy(alpha = 0.75f),
             fontSize = 14.sp,

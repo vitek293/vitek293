@@ -56,8 +56,8 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
 
-    // Jetpack Compose for TV: D-pad friendly lazy layouts with focus handling
-    implementation("androidx.tv:tv-foundation:1.0.0")
+    // Coroutines (viewModelScope)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")

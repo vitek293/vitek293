@@ -13,9 +13,10 @@ data class TvApp(
 
 /**
  * Renders any [Drawable] (including adaptive icons) into a [Bitmap].
+ * Named differently from core-ktx's `toBitmap` to avoid overload ambiguity.
  * Falls back to 96x96 when the drawable has no intrinsic size.
  */
-fun Drawable.toBitmap(): Bitmap {
+fun Drawable.toIconBitmap(): Bitmap {
     val width = intrinsicWidth.takeIf { it > 0 } ?: 96
     val height = intrinsicHeight.takeIf { it > 0 } ?: 96
     val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)

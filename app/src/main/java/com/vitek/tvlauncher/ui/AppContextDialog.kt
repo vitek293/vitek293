@@ -132,7 +132,6 @@ private fun DialogButton(
             .background(
                 if (focused) Color.White.copy(alpha = 0.14f) else Color.Transparent,
             )
-            .focusable()
             .focusRequester(requester)
             .onFocusChanged { focused = it.isFocused }
             .onKeyEvent { event ->
@@ -143,6 +142,7 @@ private fun DialogButton(
                     false
                 }
             }
+            .focusable()
             .pointerInput(Unit) {
                 detectTapGestures(onTap = { onClick() })
             }

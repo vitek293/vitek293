@@ -1,22 +1,25 @@
 package com.vitek.tvlauncher
 
 import android.app.Application
+import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.vitek.tvlauncher.data.TvApp
-import com.vitek.tvlauncher.data.toBitmap
+import com.vitek.tvlauncher.data.toIconBitmap
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class LauncherViewModel(application: Application) : AndroidViewModel(application) {
 
     private val pm = application.packageManager
     private val prefs: SharedPreferences =
-        application.getSharedPreferences(PREFS_NAME, Application.MODE_PRIVATE)
+        application.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     private val _apps = MutableStateFlow<List<TvApp>>(emptyList())
     val apps: StateFlow<List<TvApp>> = _apps.asStateFlow()
@@ -31,26 +34,31 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     /** (Re)loads the list of launchable apps installed on the device. */
     fun refresh() {
         viewModelScope.launch {
-            val launcher = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
-            val leanback = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER)
-            val ownPackage = getApplication<Application>().packageName
-
-            val infos = (pm.queryIntentActivities(launcher, 0) +
-                pm.queryIntentActivities(leanback, 0))
-                .distinctBy { it.activityInfo.packageName }
-                .filter { it.activityInfo.packageName != ownPackage }
-
-            _apps.value = infos.mapNotNull { info ->
-                val pkg = info.activityInfo.packageName
-                val label = info.loadLabel(pm).toString()
-                val icon = try {
-                    info.loadIcon(pm).toBitmap()
-                } catch (e: Exception) {
-                    null
-                } ?: return@mapNotNull null
-                TvApp(packageName = pkg, label = label, icon = icon)
-            }.sortedBy { it.label.lowercase() }
+            val result = withContext(Dispatchers.IO) { loadApps() }
+            _apps.value = result
         }
+    }
+
+    private fun loadApps(): List<TvApp> {
+        val launcher = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
+        val leanback = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER)
+        val ownPackage = getApplication<Application>().packageName
+
+        val infos = (pm.queryIntentActivities(launcher, 0) +
+            pm.queryIntentActivities(leanback, 0))
+            .distinctBy { it.activityInfo.packageName }
+            .filter { it.activityInfo.packageName != ownPackage }
+
+        return infos.mapNotNull { info ->
+            val pkg = info.activityInfo.packageName
+            val label = info.loadLabel(pm).toString()
+            val icon = try {
+                info.loadIcon(pm).toIconBitmap()
+            } catch (e: Exception) {
+                null
+            } ?: return@mapNotNull null
+            TvApp(packageName = pkg, label = label, icon = icon)
+        }.sortedBy { it.label.lowercase() }
     }
 
     fun isPinned(packageName: String): Boolean = _pins.value.contains(packageName)
