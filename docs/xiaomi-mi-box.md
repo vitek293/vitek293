@@ -51,6 +51,11 @@ adb shell getprop ro.product.model   # ожидаемо: Mi Box / MiTV / MDZ-...
 Если сомневаетесь — команда ниже покажет установленные лаунчеры, и вы
 выберете нужный из списка.
 
+> **Windows?** Пошаговая инструкция «как подключиться» с установкой ADB,
+> запросом разрешения и разбором ошибок: [`connect-windows.md`](connect-windows.md).
+> Проверка подключения одной командой:
+> `powershell -ExecutionPolicy Bypass -File scripts\connect.ps1 -Ip 192.168.0.8`
+
 ## Шаг 1. Включите отладку
 
 1. **Настройки → Об устройстве (Device Preferences → About)** →

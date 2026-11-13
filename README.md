@@ -47,6 +47,7 @@
 > с учётом того, что кнопка Home на Xiaomi привязана к PatchWall:
 > [`docs/xiaomi-mi-box.md`](docs/xiaomi-mi-box.md).
 > Всё в одну команду: `./scripts/xiaomi-setup.sh 192.168.0.8`
+> Подключение с нуля под Windows — [`docs/connect-windows.md`](docs/connect-windows.md).
 
 ### Вариант 1 — через ADB по сети (самый быстрый)
 
