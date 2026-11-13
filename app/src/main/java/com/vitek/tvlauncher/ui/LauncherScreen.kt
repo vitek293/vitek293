@@ -23,6 +23,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
@@ -161,6 +162,28 @@ fun LauncherScreen(viewModel: LauncherViewModel) {
                             flags = Intent.FLAG_ACTIVITY_NEW_TASK
                         },
                     )
+                },
+            )
+            add(
+                SystemAction(
+                    title = "Дом",
+                    icon = Icons.Filled.Home,
+                    gradient = listOf(Color(0xFF8A5CD1), Color(0xFF4A2E82)),
+                ) {
+                    // Lets you pick/clear the default home app without digging
+                    // through the settings tree — handy on Xiaomi boxes.
+                    val intent = Intent(Settings.ACTION_HOME_SETTINGS).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    }
+                    try {
+                        context.startActivity(intent)
+                    } catch (e: Exception) {
+                        context.startActivity(
+                            Intent(Settings.ACTION_SETTINGS).apply {
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            },
+                        )
+                    }
                 },
             )
             add(
