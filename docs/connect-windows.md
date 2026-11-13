@@ -145,17 +145,51 @@ List of devices attached
      Artifacts → tv-launcher-debug**. Скачается zip, внутри `app-debug.apk`.
   5. Положите файл, например, в `%USERPROFILE%\Downloads\app-debug.apk`.
 
-## Шаг 5. Дальше можно ставить лаунчер
+## Шаг 5. Установите лаунчер (вручную, 5 команд)
+
+Выполняйте из папки `C:\platform-tools`, **по одной строке**:
 
 ```powershell
-.\adb.exe install -r app-debug.apk
+# 0. Проверить, что APK действительно есть по этому пути (должно быть True)
+Test-Path "$env:USERPROFILE\Downloads\app-debug.apk"
+
+# 1. Установить
+.\adb.exe -s 192.168.0.8:5555 install -r "$env:USERPROFILE\Downloads\app-debug.apk"
+
+# 2. Назначить домашним экраном
+.\adb.exe -s 192.168.0.8:5555 shell cmd package set-home-activity com.vitek.tvlauncher/.MainActivity
+
+# 3. Посмотреть, какие лаунчеры есть на приставке
+.\adb.exe -s 192.168.0.8:5555 shell pm list packages | Select-String "tvhome|launcher"
 ```
 
-или сразу всё вместе (установка + домашний экран + отключение PatchWall):
+Шаг 1 должен ответить `Success`. Шаг 3 покажет список — обычно это
+`com.mitv.tvhome.atv` (PatchWall) и `com.google.android.tvlauncher`.
+Отключите те, что нашлись (можно обе команды, лишняя просто ничего не сделает):
 
 ```powershell
-# из папки с репозиторием, в Git Bash
-./scripts/xiaomi-setup.sh 192.168.0.8
+.\adb.exe -s 192.168.0.8:5555 shell pm disable-user --user 0 com.mitv.tvhome.atv
+.\adb.exe -s 192.168.0.8:5555 shell pm disable-user --user 0 com.google.android.tvlauncher
+```
+
+Теперь нажмите **Home** на пульте — откроется лаунчер.
+
+### Если хотите воспользоваться готовым скриптом
+
+Скрипты лежат в репозитории, а не в `C:\platform-tools`. Либо склонируйте
+репозиторий и запускайте из его папки:
+
+```powershell
+cd "$env:USERPROFILE\Downloads"
+git clone https://github.com/vitek293/vitek293.git
+cd vitek293
+powershell -ExecutionPolicy Bypass -File scripts\setup-windows.ps1 -Apk "$env:USERPROFILE\Downloads\app-debug.apk"
+```
+
+Либо укажите полный путь к скачанному файлу скрипта:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File "C:\Users\<вы>\Downloads\setup-windows.ps1" -Apk "$env:USERPROFILE\Downloads\app-debug.apk" -Adb C:\platform-tools\adb.exe
 ```
 
 ---
@@ -178,3 +212,4 @@ Play Маркета) → установите. Но переключить кн�
 | `.db.exe version\` | лишний `\` в конце строки | печатайте команду без него: `.db.exe version` |
 | две команды слиплись в одну (`devices.db.exe connect ...`) | не нажали Enter после первой | выполняйте по одной строке |
 | `adb is not recognized` при вызове просто `adb` | папка не в PATH | используйте `.\adb.exe` или добавьте папку в PATH |
+| `Аргумент "scripts\setup-windows.ps1" для параметра -File не существует` | скрипт запускают не из папки репозитория | выполните `cd` в папку репозитория или укажите полный путь к файлу |
