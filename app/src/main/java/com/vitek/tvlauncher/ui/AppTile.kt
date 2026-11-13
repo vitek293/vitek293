@@ -40,6 +40,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.nativeKeyEvent
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.pointerInput
@@ -102,11 +103,11 @@ fun AppTile(
                 .onKeyEvent { event ->
                     when {
                         event.key == Key.DirectionCenter && event.type == KeyEventType.KeyDown -> {
-                            downTime = event.nativeEvent.eventTime
+                            downTime = event.nativeKeyEvent.eventTime
                             true
                         }
                         event.key == Key.DirectionCenter && event.type == KeyEventType.KeyUp -> {
-                            if (event.nativeEvent.eventTime - downTime > LONG_PRESS_MS) {
+                            if (event.nativeKeyEvent.eventTime - downTime > LONG_PRESS_MS) {
                                 onLongClick()
                             } else {
                                 onClick()
@@ -195,128 +196,4 @@ fun TopShelfTile(
             }
             .onKeyEvent { event ->
                 when {
-                    event.key == Key.DirectionCenter && event.type == KeyEventType.KeyDown -> {
-                        downTime = event.nativeEvent.eventTime
-                        true
-                    }
-                    event.key == Key.DirectionCenter && event.type == KeyEventType.KeyUp -> {
-                        if (event.nativeEvent.eventTime - downTime > LONG_PRESS_MS) {
-                            onLongClick()
-                        } else {
-                            onClick()
-                        }
-                        true
-                    }
-                    else -> false
-                }
-            }
-            .focusable()
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onTap = { onClick() },
-                    onLongPress = { onLongClick() },
-                )
-            }
-            .padding(24.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Image(
-            bitmap = app.icon.asImageBitmap(),
-            contentDescription = app.label,
-            modifier = Modifier
-                .size(88.dp)
-                .clip(RoundedCornerShape(22.dp)),
-            contentScale = ContentScale.FillBounds,
-        )
-        Spacer(Modifier.width(20.dp))
-        Column {
-            Text(
-                text = app.label,
-                color = Color.White,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Spacer(Modifier.height(6.dp))
-            Text(
-                text = "Открыть",
-                color = Color.White.copy(alpha = 0.55f),
-                fontSize = 15.sp,
-            )
-        }
-    }
-}
-
-/** System shortcut tile (Settings, Search, Play Store) with a vector icon. */
-@Composable
-fun SystemTile(
-    title: String,
-    icon: ImageVector,
-    gradient: List<Color>,
-    focusRequester: FocusRequester,
-    onFocusChange: (Boolean) -> Unit,
-    onClick: () -> Unit,
-) {
-    var focused by remember { mutableStateOf(false) }
-    val scale by animateFloatAsState(
-        targetValue = if (focused) 1.16f else 1f,
-        animationSpec = tween(160),
-    )
-
-    Column(
-        modifier = Modifier.zIndex(if (focused) 1f else 0f),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Box(
-            modifier = Modifier
-                .size(96.dp)
-                .graphicsLayer {
-                    scaleX = scale
-                    scaleY = scale
-                }
-                .shadow(
-                    elevation = if (focused) 28.dp else 10.dp,
-                    shape = TileShape,
-                )
-                .clip(TileShape)
-                .background(Brush.linearGradient(gradient))
-                .focusRequester(focusRequester)
-                .onFocusChanged {
-                    focused = it.isFocused
-                    onFocusChange(it.isFocused)
-                }
-                .onKeyEvent { event ->
-                    if (event.key == Key.DirectionCenter && event.type == KeyEventType.KeyUp) {
-                        onClick()
-                        true
-                    } else {
-                        false
-                    }
-                }
-                .focusable()
-                .pointerInput(Unit) {
-                    detectTapGestures(onTap = { onClick() })
-                },
-            contentAlignment = Alignment.Center,
-        ) {
-            Image(
-                imageVector = icon,
-                contentDescription = title,
-                modifier = Modifier.size(44.dp),
-                colorFilter = ColorFilter.tint(Color.White),
-            )
-        }
-        Spacer(Modifier.height(10.dp))
-        Text(
-            text = title,
-            color = if (focused) Color.White else Color.White.copy(alpha = 0.75f),
-            fontSize = 14.sp,
-            fontWeight = if (focused) FontWeight.SemiBold else FontWeight.Normal,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.width(128.dp),
-        )
-    }
-}
+                    event.key == 
